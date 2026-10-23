@@ -1,0 +1,369 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Department {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  code        String     @unique
+  description String?
+  isActive    Boolean    @default(true)
+  employees   Employee[]
+  kpis        Kpi[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([isActive])
+}
+
+model Role {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  users       User[]
+}
+
+model User {
+  id                              String                         @id @default(cuid())
+  email                           String                         @unique
+  passwordHash                    String
+  roleId                          String
+  role                            Role                           @relation(fields: [roleId], references: [id])
+  employeeId                      String?                        @unique
+  employee                        Employee?                      @relation(fields: [employeeId], references: [id])
+  passwordResetOtps               PasswordResetOtp[]
+  reviewedMonthlyReports          MonthlyReport[]                @relation("MonthlyReportReviewer")
+  monthlyReportActions            MonthlyReportActionHistory[]
+  monthlyReportUploads            MonthlyReportAttachment[]
+  managerReviewedQuarterlyReports QuarterlyReport[]              @relation("QuarterlyManagerReviewer")
+  hrReviewedQuarterlyReports      QuarterlyReport[]              @relation("QuarterlyHrReviewer")
+  quarterlyReportActions          QuarterlyReportActionHistory[]
+  isActive                        Boolean                        @default(true)
+  mustChangePassword              Boolean                        @default(true)
+  passwordChangedAt               DateTime?
+  lastLoginAt                     DateTime?
+  createdAt                       DateTime                       @default(now())
+  updatedAt                       DateTime                       @updatedAt
+
+  @@index([roleId])
+  @@index([isActive])
+}
+
+model PasswordResetOtp {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  otpHash      String
+  expiresAt    DateTime  @db.Timestamptz(3)
+  verifiedAt   DateTime? @db.Timestamptz(3)
+  usedAt       DateTime? @db.Timestamptz(3)
+  attemptCount Int       @default(0)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@index([userId, usedAt, createdAt])
+  @@index([expiresAt])
+}
+
+model Employee {
+  id               String            @id @default(cuid())
+  employeeCode     String            @unique
+  firstName        String
+  lastName         String
+  email            String            @unique
+  phone            String?
+  departmentId     String
+  department       Department        @relation(fields: [departmentId], references: [id])
+  designation      String
+  managerId        String?
+  manager          Employee?         @relation("EmployeeManager", fields: [managerId], references: [id])
+  directReports    Employee[]        @relation("EmployeeManager")
+  joiningDate      DateTime
+  employmentStatus String
+  user             User?
+  monthlyReports   MonthlyReport[]
+  quarterlyReports QuarterlyReport[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([departmentId])
+  @@index([managerId])
+  @@index([employmentStatus])
+}
+
+enum MonthlyReportStatus {
+  DRAFT
+  SUBMITTED
+  RETURNED
+  APPROVED
+}
+
+enum MonthlyReportAction {
+  CREATED
+  UPDATED
+  SUBMITTED
+  RETURNED
+  RESUBMITTED
+  APPROVED
+  ATTACHMENT_ADDED
+  ATTACHMENT_REMOVED
+}
+
+model MonthlyReport {
+  id                String                        @id @default(cuid())
+  employeeId        String
+  employee          Employee                      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  month             Int
+  year              Int
+  reportPeriod      String
+  status            MonthlyReportStatus           @default(DRAFT)
+  summary           String
+  achievements      String
+  challenges        String
+  pendingWork       String
+  nextMonthPlan     String
+  employeeComments  String?
+  managerComments   String?
+  submittedAt       DateTime?                     @db.Timestamptz(3)
+  reviewedAt        DateTime?                     @db.Timestamptz(3)
+  reviewedById      String?
+  reviewedBy        User?                         @relation("MonthlyReportReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  hrDetail          HrMonthlyReportDetail?
+  developerDetail   DeveloperMonthlyReportDetail?
+  payrollDetail     PayrollMonthlyReportDetail?
+  attachments       MonthlyReportAttachment[]
+  history           MonthlyReportActionHistory[]
+  quarterlyAsFirst  QuarterlyReport[]             @relation("QuarterlyMonth1")
+  quarterlyAsSecond QuarterlyReport[]             @relation("QuarterlyMonth2")
+  quarterlyAsThird  QuarterlyReport[]             @relation("QuarterlyMonth3")
+  createdAt         DateTime                      @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime                      @updatedAt @db.Timestamptz(3)
+
+  @@unique([employeeId, month, year])
+  @@index([status, year, month])
+  @@index([reviewedById])
+}
+
+model HrMonthlyReportDetail {
+  id                     String        @id @default(cuid())
+  monthlyReportId        String        @unique
+  monthlyReport          MonthlyReport @relation(fields: [monthlyReportId], references: [id], onDelete: Cascade)
+  openPositions          Int           @default(0)
+  positionsClosed        Int           @default(0)
+  candidatesInterviewed  Int           @default(0)
+  employeesOnboarded     Int           @default(0)
+  documentsCompleted     Int           @default(0)
+  documentsPending       Int           @default(0)
+  employeeIssuesResolved Int           @default(0)
+  remarks                String?
+}
+
+model DeveloperMonthlyReportDetail {
+  id                    String        @id @default(cuid())
+  monthlyReportId       String        @unique
+  monthlyReport         MonthlyReport @relation(fields: [monthlyReportId], references: [id], onDelete: Cascade)
+  tasksAssigned         Int           @default(0)
+  tasksCompleted        Int           @default(0)
+  tasksPending          Int           @default(0)
+  bugsAssigned          Int           @default(0)
+  bugsResolved          Int           @default(0)
+  projectsWorkedOn      Int           @default(0)
+  deploymentsCompleted  Int           @default(0)
+  onTimeDeliveryPercent Float?
+  remarks               String?
+}
+
+model PayrollMonthlyReportDetail {
+  id                  String        @id @default(cuid())
+  monthlyReportId     String        @unique
+  monthlyReport       MonthlyReport @relation(fields: [monthlyReportId], references: [id], onDelete: Cascade)
+  employeesProcessed  Int           @default(0)
+  payrollCompleted    Int           @default(0)
+  payrollErrors       Int           @default(0)
+  correctionsRequired Int           @default(0)
+  payslipsGenerated   Int           @default(0)
+  payslipsPending     Int           @default(0)
+  employeeQueries     Int           @default(0)
+  queriesResolved     Int           @default(0)
+  pfStatus            String
+  esiStatus           String
+  tdsStatus           String
+  remarks             String?
+}
+
+model MonthlyReportAttachment {
+  id              String        @id @default(cuid())
+  monthlyReportId String
+  monthlyReport   MonthlyReport @relation(fields: [monthlyReportId], references: [id], onDelete: Cascade)
+  originalName    String
+  storedName      String        @unique
+  mimeType        String
+  size            Int
+  uploadedById    String
+  uploadedBy      User          @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@index([monthlyReportId, createdAt])
+  @@index([uploadedById])
+}
+
+model MonthlyReportActionHistory {
+  id                String              @id @default(cuid())
+  monthlyReportId   String
+  monthlyReport     MonthlyReport       @relation(fields: [monthlyReportId], references: [id], onDelete: Cascade)
+  action            MonthlyReportAction
+  performedByUserId String
+  performedByUser   User                @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
+  comment           String?
+  createdAt         DateTime            @default(now()) @db.Timestamptz(3)
+
+  @@index([monthlyReportId, createdAt])
+  @@index([performedByUserId])
+}
+
+enum Quarter {
+  Q1
+  Q2
+  Q3
+  Q4
+}
+
+enum QuarterlyReportStatus {
+  DRAFT
+  SUBMITTED
+  MANAGER_REVIEWED
+  RETURNED
+  FINALIZED
+}
+
+enum KpiUnitType {
+  NUMBER
+  PERCENTAGE
+  BOOLEAN
+  RATING
+  TEXT
+}
+
+enum QuarterlyReportAction {
+  CREATED
+  UPDATED
+  SUBMITTED
+  RETURNED
+  MANAGER_REVIEWED
+  FINALIZED
+}
+
+model Kpi {
+  id              String              @id @default(cuid())
+  name            String
+  code            String              @unique
+  description     String?
+  departmentId    String?
+  department      Department?         @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  isCommon        Boolean             @default(false)
+  unitType        KpiUnitType
+  weightage       Decimal             @db.Decimal(5, 2)
+  isActive        Boolean             @default(true)
+  sortOrder       Int                 @default(0)
+  quarterlyScores QuarterlyKpiScore[]
+  createdAt       DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime            @updatedAt @db.Timestamptz(3)
+
+  @@index([departmentId, isActive, sortOrder])
+  @@index([isCommon, isActive])
+}
+
+model PerformanceRatingRange {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  minScore  Decimal  @db.Decimal(5, 2)
+  maxScore  Decimal  @db.Decimal(5, 2)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([isActive, sortOrder])
+}
+
+model QuarterlyReport {
+  id                  String                         @id @default(cuid())
+  employeeId          String
+  employee            Employee                       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  quarter             Quarter
+  year                Int
+  status              QuarterlyReportStatus          @default(DRAFT)
+  summary             String
+  majorAchievements   String
+  majorChallenges     String
+  nextQuarterFocus    String
+  employeeComments    String?
+  managerComments     String?
+  hrComments          String?
+  monthlyReport1Id    String?
+  monthlyReport1      MonthlyReport?                 @relation("QuarterlyMonth1", fields: [monthlyReport1Id], references: [id], onDelete: SetNull)
+  monthlyReport2Id    String?
+  monthlyReport2      MonthlyReport?                 @relation("QuarterlyMonth2", fields: [monthlyReport2Id], references: [id], onDelete: SetNull)
+  monthlyReport3Id    String?
+  monthlyReport3      MonthlyReport?                 @relation("QuarterlyMonth3", fields: [monthlyReport3Id], references: [id], onDelete: SetNull)
+  employeeSubmittedAt DateTime?                      @db.Timestamptz(3)
+  managerReviewedAt   DateTime?                      @db.Timestamptz(3)
+  hrReviewedAt        DateTime?                      @db.Timestamptz(3)
+  finalizedAt         DateTime?                      @db.Timestamptz(3)
+  managerReviewedById String?
+  managerReviewedBy   User?                          @relation("QuarterlyManagerReviewer", fields: [managerReviewedById], references: [id], onDelete: SetNull)
+  hrReviewedById      String?
+  hrReviewedBy        User?                          @relation("QuarterlyHrReviewer", fields: [hrReviewedById], references: [id], onDelete: SetNull)
+  overallScore        Decimal?                       @db.Decimal(5, 2)
+  finalRating         String?
+  kpiScores           QuarterlyKpiScore[]
+  history             QuarterlyReportActionHistory[]
+  createdAt           DateTime                       @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime                       @updatedAt @db.Timestamptz(3)
+
+  @@unique([employeeId, quarter, year])
+  @@index([status, year, quarter])
+  @@index([monthlyReport1Id])
+  @@index([monthlyReport2Id])
+  @@index([monthlyReport3Id])
+  @@index([managerReviewedById])
+  @@index([hrReviewedById])
+}
+
+model QuarterlyKpiScore {
+  id                String          @id @default(cuid())
+  quarterlyReportId String
+  quarterlyReport   QuarterlyReport @relation(fields: [quarterlyReportId], references: [id], onDelete: Cascade)
+  kpiId             String
+  kpi               Kpi             @relation(fields: [kpiId], references: [id], onDelete: Restrict)
+  targetValue       String?
+  actualValue       String?
+  score             Decimal         @default(0) @db.Decimal(5, 2)
+  weightageSnapshot Decimal         @db.Decimal(5, 2)
+  weightedScore     Decimal         @default(0) @db.Decimal(7, 2)
+  managerComment    String?
+  createdAt         DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime        @updatedAt @db.Timestamptz(3)
+
+  @@unique([quarterlyReportId, kpiId])
+  @@index([kpiId])
+}
+
+model QuarterlyReportActionHistory {
+  id                String                @id @default(cuid())
+  quarterlyReportId String
+  quarterlyReport   QuarterlyReport       @relation(fields: [quarterlyReportId], references: [id], onDelete: Cascade)
+  action            QuarterlyReportAction
+  performedByUserId String
+  performedByUser   User                  @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
+  comment           String?
+  createdAt         DateTime              @default(now()) @db.Timestamptz(3)
+
+  @@index([quarterlyReportId, createdAt])
+  @@index([performedByUserId])
+}
