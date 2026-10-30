@@ -1,0 +1,79 @@
+[
+    {
+        "rbaSection":  "A",
+        "rbaReference":  "LABOR\nA1) Prohibition of Forced Labor",
+        "ratingCode":  "MAJOR_NC",
+        "description":  "Employement Contract signed by worker without date.",
+        "sourceRow":  9
+    },
+    {
+        "rbaSection":  "A",
+        "rbaReference":  "LABOR\nA1) Prohibition of Forced Labor",
+        "ratingCode":  "MAJOR_NC",
+        "description":  "Employement contract clause  Clause # 19 Termination \u0026 Consequences \nClause 19.1 - Company have right to terminate workers without assigning any reason.\n3.Clause 19.2 employement contract - Notice period 30 days, short notice is pay in lieu",
+        "sourceRow":  10
+    },
+    {
+        "rbaSection":  "A",
+        "rbaReference":  "A4) Wage and Benefits",
+        "ratingCode":  "MAJOR_NC",
+        "description":  "Worker receives pay slip after receive salary.\n(RBA requirement , worker to receive pay slip prior to receive salary)",
+        "sourceRow":  11
+    },
+    {
+        "rbaSection":  "AM",
+        "rbaReference":  "AM1.1 Labor Managemnt System /\nRisk Assessment",
+        "ratingCode":  "MINOR_NC",
+        "description":  "No Legal Register",
+        "sourceRow":  12
+    },
+    {
+        "rbaSection":  "AM",
+        "rbaReference":  "AM1.2 Labor Managemnt System /\nRisk Assessment",
+        "ratingCode":  "MINOR_NC",
+        "description":  "No Risk Assessmnet done. \nTo send template",
+        "sourceRow":  13
+    },
+    {
+        "rbaSection":  "AM",
+        "rbaReference":  "AM 2.1 Control Processs",
+        "ratingCode":  "MINOR_NC",
+        "description":  "No Organization chart",
+        "sourceRow":  14
+    },
+    {
+        "rbaSection":  "AM",
+        "rbaReference":  "AM 2.3 Control Processs",
+        "ratingCode":  "MAJOR_NC",
+        "description":  "Briefing done .but not documented.\nTraining schedule/ attendance/ effectiveness of the training.",
+        "sourceRow":  15
+    },
+    {
+        "rbaSection":  "AM",
+        "rbaReference":  "AM4.1  Performance Review and Continuous Improvement",
+        "ratingCode":  "MINOR_NC",
+        "description":  "Management Review is done every quarter , last done in April 2026.\nWho attended the MR\nAgenda of the meeting - will send later",
+        "sourceRow":  16
+    },
+    {
+        "rbaSection":  "AM",
+        "rbaReference":  "AM4.2 Performance Review and Continuous Improvement",
+        "ratingCode":  "MINOR_NC",
+        "description":  "Internal Audit not performed formally - its more of a checking manualy without any report .\nNo internal audit performed.",
+        "sourceRow":  17
+    },
+    {
+        "rbaSection":  "AM",
+        "rbaReference":  "AM 4.2 Control processes",
+        "ratingCode":  "OFI",
+        "description":  "Organization chart with delegated role required.",
+        "sourceRow":  18
+    },
+    {
+        "rbaSection":  "AM",
+        "rbaReference":  "AM4.3 Performance Review and Continuous Improvement",
+        "ratingCode":  "MINOR_NC",
+        "description":  "No CAPA",
+        "sourceRow":  19
+    }
+]

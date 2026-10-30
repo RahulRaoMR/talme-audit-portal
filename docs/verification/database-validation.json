@@ -1,0 +1,30 @@
+{
+  "existingRecordsBefore": {
+    "users": 1,
+    "employees": 1,
+    "monthlyReports": 0,
+    "quarterlyReports": 0
+  },
+  "existingRecordsAfter": {
+    "users": 1,
+    "employees": 1,
+    "monthlyReports": 0,
+    "quarterlyReports": 0
+  },
+  "existingRecordsPreserved": true,
+  "importedAudit": {
+    "reference": "AUD-2026-0001",
+    "status": "DRAFT",
+    "findings": 11,
+    "majorNC": 4,
+    "minorNC": 6,
+    "ofi": 1,
+    "unassignedOwners": 11,
+    "auditDate": null
+  },
+  "tablesWithRLS": 25,
+  "unitTestsPassed": 37,
+  "apiChecksPassed": 99,
+  "browserVerification": "passed",
+  "pdfPreview": "audit-report-preview.pdf"
+}

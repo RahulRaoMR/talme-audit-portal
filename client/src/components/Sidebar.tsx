@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Bell,
   Building2,
   CalendarCheck,
   ClipboardCheck,
@@ -28,9 +29,12 @@ const navigation = [
   { label: "Attendance", path: "/dashboard", icon: CalendarCheck },
   { label: "KPI Management", path: "/kpis", icon: Gauge, adminOnly: true },
   { label: "Performance Reviews", path: "/dashboard", icon: ClipboardCheck },
-  { label: "Internal Audits", path: "/dashboard", icon: ShieldCheck },
+  { label: "Internal Audits", path: "/audits", icon: ShieldCheck },
+  { label: "CAPA Register", path: "/capas", icon: ListChecks },
+  { label: "Compliance Documents", path: "/compliance-documents", icon: FileText },
+  { label: "Notifications", path: "/notifications", icon: Bell },
   { label: "Departments", path: "/dashboard", icon: Building2 },
-  { label: "Reports & Analytics", path: "/dashboard", icon: BarChart3 },
+  { label: "Reports & Analytics", path: "/audit-reports", icon: BarChart3 },
   { label: "Settings", path: "/dashboard", icon: Settings }
 ];
 
@@ -56,7 +60,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       ) : null}
       <aside
         className={classNames(
-          "fixed inset-y-0 left-0 z-50 min-h-screen w-72 shrink-0 border-r border-slate-200 bg-white px-4 py-5 transition-transform lg:static lg:z-auto lg:translate-x-0",
+                  "fixed inset-y-0 left-0 z-50 min-h-screen w-72 shrink-0 overflow-y-auto border-r border-slate-200 bg-white px-4 py-5 transition-transform lg:static lg:z-auto lg:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >

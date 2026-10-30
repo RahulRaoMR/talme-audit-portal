@@ -130,4 +130,14 @@ ALTER TABLE "Employee" ADD CONSTRAINT "Employee_managerId_fkey" FOREIGN KEY ("ma
 
 -- Keep password-reset records private to the trusted backend connection.
 ALTER TABLE "PasswordResetOtp" ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON TABLE "PasswordResetOtp" FROM anon, authenticated;
+REVOKE ALL ON TABLE "PasswordResetOtp" FROM PUBLIC;
+
+-- Supabase API roles do not exist on every PostgreSQL provider (including Neon).
+DO $permissions$
+DECLARE api_role text;
+BEGIN
+    FOR api_role IN SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'authenticated') LOOP
+        EXECUTE format('REVOKE ALL ON TABLE "PasswordResetOtp" FROM %I', api_role);
+    END LOOP;
+END;
+$permissions$;

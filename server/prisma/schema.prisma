@@ -1,23 +1,27 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model Department {
-  id          String     @id @default(cuid())
-  name        String     @unique
-  code        String     @unique
-  description String?
-  isActive    Boolean    @default(true)
-  employees   Employee[]
-  kpis        Kpi[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id             String           @id @default(cuid())
+  name           String           @unique
+  code           String           @unique
+  description    String?
+  isActive       Boolean          @default(true)
+  employees      Employee[]
+  kpis           Kpi[]
+  internalAudits InternalAudit[]
+  auditFindings  AuditFinding[]
+  capaActions    CapaActionItem[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
   @@index([isActive])
 }
@@ -44,6 +48,17 @@ model User {
   managerReviewedQuarterlyReports QuarterlyReport[]              @relation("QuarterlyManagerReviewer")
   hrReviewedQuarterlyReports      QuarterlyReport[]              @relation("QuarterlyHrReviewer")
   quarterlyReportActions          QuarterlyReportActionHistory[]
+  auditsCreated                   InternalAudit[]                @relation("AuditCreator")
+  auditsLed                       InternalAudit[]                @relation("AuditLead")
+  auditTeams                      AuditTeamMember[]
+  capasPrepared                   Capa[]                         @relation("CapaPreparer")
+  capasReviewed                   Capa[]                         @relation("CapaReviewer")
+  capasVerified                   Capa[]                         @relation("CapaVerifier")
+  capasClosed                     Capa[]                         @relation("CapaCloser")
+  actionVerifications             CapaActionItem[]               @relation("ActionVerifier")
+  capaVerifications               CapaVerification[]
+  evidenceReviews                 MonthlyReportAttachment[]      @relation("EvidenceReviewer")
+  notifications                   PortalNotification[]
   isActive                        Boolean                        @default(true)
   mustChangePassword              Boolean                        @default(true)
   passwordChangedAt               DateTime?
@@ -71,25 +86,27 @@ model PasswordResetOtp {
 }
 
 model Employee {
-  id               String            @id @default(cuid())
-  employeeCode     String            @unique
-  firstName        String
-  lastName         String
-  email            String            @unique
-  phone            String?
-  departmentId     String
-  department       Department        @relation(fields: [departmentId], references: [id])
-  designation      String
-  managerId        String?
-  manager          Employee?         @relation("EmployeeManager", fields: [managerId], references: [id])
-  directReports    Employee[]        @relation("EmployeeManager")
-  joiningDate      DateTime
-  employmentStatus String
-  user             User?
-  monthlyReports   MonthlyReport[]
-  quarterlyReports QuarterlyReport[]
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id                  String            @id @default(cuid())
+  employeeCode        String            @unique
+  firstName           String
+  lastName            String
+  email               String            @unique
+  phone               String?
+  departmentId        String
+  department          Department        @relation(fields: [departmentId], references: [id])
+  designation         String
+  managerId           String?
+  manager             Employee?         @relation("EmployeeManager", fields: [managerId], references: [id])
+  directReports       Employee[]        @relation("EmployeeManager")
+  joiningDate         DateTime
+  employmentStatus    String
+  user                User?
+  monthlyReports      MonthlyReport[]
+  quarterlyReports    QuarterlyReport[]
+  assignedFindings    AuditFinding[]
+  assignedCapaActions CapaActionItem[]
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
   @@index([departmentId])
   @@index([managerId])
@@ -112,6 +129,30 @@ enum MonthlyReportAction {
   APPROVED
   ATTACHMENT_ADDED
   ATTACHMENT_REMOVED
+  AUDIT_CREATED
+  AUDIT_UPDATED
+  AUDIT_STATUS_CHANGED
+  AUDITOR_ASSIGNED
+  FINDING_CREATED
+  FINDING_UPDATED
+  FINDING_CLOSED
+  CAPA_UPDATED
+  CAPA_SUBMITTED
+  CAPA_REVIEW_STARTED
+  CAPA_ACCEPTED
+  CAPA_RETURNED
+  ACTION_CREATED
+  ACTION_UPDATED
+  ACTION_COMPLETED
+  ACTION_VERIFIED
+  ACTION_REJECTED
+  EVIDENCE_REVIEWED
+  VERIFICATION_REQUESTED
+  CAPA_VERIFIED
+  VERIFICATION_REJECTED
+  COMMENT_ADDED
+  AUDIT_CLOSED
+  AUDIT_REOPENED
 }
 
 model MonthlyReport {
@@ -197,25 +238,52 @@ model PayrollMonthlyReportDetail {
 }
 
 model MonthlyReportAttachment {
-  id              String        @id @default(cuid())
-  monthlyReportId String
-  monthlyReport   MonthlyReport @relation(fields: [monthlyReportId], references: [id], onDelete: Cascade)
+  id              String               @id @default(cuid())
+  monthlyReportId String?
+  monthlyReport   MonthlyReport?       @relation(fields: [monthlyReportId], references: [id], onDelete: Cascade)
+  auditId         String?
+  audit           InternalAudit?       @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  findingId       String?
+  finding         AuditFinding?        @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  capaId          String?
+  capa            Capa?                @relation(fields: [capaId], references: [id], onDelete: Cascade)
+  actionItemId    String?
+  actionItem      CapaActionItem?      @relation(fields: [actionItemId], references: [id], onDelete: Cascade)
+  purpose         String               @default("GENERAL")
+  reviewStatus    EvidenceReviewStatus @default(PENDING)
+  reviewedById    String?
+  reviewedBy      User?                @relation("EvidenceReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt      DateTime?            @db.Timestamptz(3)
+  reviewComment   String?
   originalName    String
-  storedName      String        @unique
+  storedName      String               @unique
   mimeType        String
   size            Int
   uploadedById    String
-  uploadedBy      User          @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
-  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+  uploadedBy      User                 @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  createdAt       DateTime             @default(now()) @db.Timestamptz(3)
 
   @@index([monthlyReportId, createdAt])
   @@index([uploadedById])
+  @@index([auditId, createdAt])
+  @@index([findingId])
+  @@index([capaId])
+  @@index([actionItemId])
+  @@index([reviewedById])
 }
 
 model MonthlyReportActionHistory {
   id                String              @id @default(cuid())
-  monthlyReportId   String
-  monthlyReport     MonthlyReport       @relation(fields: [monthlyReportId], references: [id], onDelete: Cascade)
+  monthlyReportId   String?
+  monthlyReport     MonthlyReport?      @relation(fields: [monthlyReportId], references: [id], onDelete: Cascade)
+  auditId           String?
+  audit             InternalAudit?      @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  findingId         String?
+  finding           AuditFinding?       @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  capaId            String?
+  capa              Capa?               @relation(fields: [capaId], references: [id], onDelete: Cascade)
+  previousStatus    String?
+  newStatus         String?
   action            MonthlyReportAction
   performedByUserId String
   performedByUser   User                @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
@@ -224,6 +292,267 @@ model MonthlyReportActionHistory {
 
   @@index([monthlyReportId, createdAt])
   @@index([performedByUserId])
+  @@index([auditId, createdAt])
+  @@index([findingId])
+  @@index([capaId])
+}
+
+enum InternalAuditStatus {
+  DRAFT
+  SCHEDULED
+  IN_PROGRESS
+  AUDIT_COMPLETED
+  FINDINGS_ISSUED
+  CAPA_PENDING
+  CAPA_UNDER_REVIEW
+  VERIFICATION_PENDING
+  CLOSED
+  CANCELLED
+}
+
+enum AuditFindingStatus {
+  OPEN
+  CAPA_PENDING
+  UNDER_REVIEW
+  ACTION_IN_PROGRESS
+  VERIFICATION_PENDING
+  CLOSED
+}
+
+enum CapaStatus {
+  OPEN
+  RCA_PENDING
+  PREPARATION
+  SUBMITTED
+  UNDER_REVIEW
+  ACTION_IN_PROGRESS
+  VERIFICATION_PENDING
+  VERIFIED
+  CLOSED
+  RETURNED
+}
+
+enum CapaActionType {
+  CONTAINMENT
+  CORRECTIVE
+  PREVENTIVE
+}
+
+enum CapaActionStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  VERIFICATION_PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum EvidenceReviewStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model AuditCounter {
+  key   String @id
+  value Int    @default(0)
+}
+
+model FindingRating {
+  code     String         @id
+  label    String
+  severity Int            @default(0)
+  isActive Boolean        @default(true)
+  findings AuditFinding[]
+}
+
+model InternalAudit {
+  id                     String                       @id @default(cuid())
+  reference              String                       @unique
+  title                  String
+  organisation           String
+  departmentId           String
+  department             Department                   @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  auditorId              String
+  auditor                User                         @relation("AuditLead", fields: [auditorId], references: [id], onDelete: Restrict)
+  createdById            String
+  createdBy              User                         @relation("AuditCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  auditDate              DateTime?                    @db.Date
+  scope                  String                       @default("")
+  auditType              String                       @default("INTERNAL")
+  location               String                       @default("")
+  standardReference      String                       @default("RBA")
+  status                 InternalAuditStatus          @default(DRAFT)
+  capaPreparationDueDate DateTime?                    @db.Date
+  findingsIssuedAt       DateTime?                    @db.Timestamptz(3)
+  closedAt               DateTime?                    @db.Timestamptz(3)
+  findingSequence        Int                          @default(0)
+  sourceDocument         String?
+  sourceImportKey        String?                      @unique
+  teamMembers            AuditTeamMember[]
+  findings               AuditFinding[]
+  evidence               MonthlyReportAttachment[]
+  history                MonthlyReportActionHistory[]
+  createdAt              DateTime                     @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime                     @updatedAt @db.Timestamptz(3)
+
+  @@index([departmentId, status, auditDate])
+  @@index([auditorId, status])
+  @@index([createdById])
+  @@index([status, auditDate])
+}
+
+model AuditTeamMember {
+  auditId String
+  audit   InternalAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@id([auditId, userId])
+  @@index([userId])
+}
+
+model AuditFinding {
+  id                    String                       @id @default(cuid())
+  reference             String                       @unique
+  auditId               String
+  audit                 InternalAudit                @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  rbaSection            String
+  rbaReference          String
+  ratingCode            String
+  rating                FindingRating                @relation(fields: [ratingCode], references: [code], onDelete: Restrict)
+  description           String
+  departmentId          String
+  department            Department                   @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  responsibleEmployeeId String?
+  responsibleEmployee   Employee?                    @relation(fields: [responsibleEmployeeId], references: [id], onDelete: Restrict)
+  status                AuditFindingStatus           @default(OPEN)
+  sourceModule          String?
+  sourceRecordId        String?
+  closedAt              DateTime?                    @db.Timestamptz(3)
+  capa                  Capa?
+  evidence              MonthlyReportAttachment[]
+  history               MonthlyReportActionHistory[]
+  createdAt             DateTime                     @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime                     @updatedAt @db.Timestamptz(3)
+
+  @@unique([auditId, sourceModule, sourceRecordId])
+  @@index([auditId, status])
+  @@index([departmentId, status])
+  @@index([responsibleEmployeeId, status])
+  @@index([ratingCode, status])
+  @@index([sourceModule, sourceRecordId])
+}
+
+model Capa {
+  id                 String                       @id @default(cuid())
+  reference          String                       @unique
+  findingId          String                       @unique
+  finding            AuditFinding                 @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  status             CapaStatus                   @default(OPEN)
+  rcaMethod          String                       @default("STANDARD")
+  rootCause          String                       @default("")
+  problemStatement   String                       @default("")
+  why1               String                       @default("")
+  why2               String                       @default("")
+  why3               String                       @default("")
+  why4               String                       @default("")
+  why5               String                       @default("")
+  finalRootCause     String                       @default("")
+  containmentAction  String                       @default("")
+  correctiveAction   String                       @default("")
+  preventiveAction   String                       @default("")
+  dateEstablished    DateTime                     @default(now()) @db.Date
+  startDate          DateTime?                    @db.Date
+  targetDate         DateTime?                    @db.Date
+  implementationDays Int?
+  completionDate     DateTime?                    @db.Date
+  preparedById       String?
+  preparedBy         User?                        @relation("CapaPreparer", fields: [preparedById], references: [id], onDelete: Restrict)
+  reviewedById       String?
+  reviewedBy         User?                        @relation("CapaReviewer", fields: [reviewedById], references: [id], onDelete: Restrict)
+  verifiedById       String?
+  verifiedBy         User?                        @relation("CapaVerifier", fields: [verifiedById], references: [id], onDelete: Restrict)
+  closedById         String?
+  closedBy           User?                        @relation("CapaCloser", fields: [closedById], references: [id], onDelete: Restrict)
+  submittedAt        DateTime?                    @db.Timestamptz(3)
+  reviewedAt         DateTime?                    @db.Timestamptz(3)
+  verifiedAt         DateTime?                    @db.Timestamptz(3)
+  closedAt           DateTime?                    @db.Timestamptz(3)
+  auditorStatus      String                       @default("NOT_REVIEWED")
+  auditorComments    String                       @default("")
+  verificationResult String                       @default("")
+  actions            CapaActionItem[]
+  evidence           MonthlyReportAttachment[]
+  verifications      CapaVerification[]
+  history            MonthlyReportActionHistory[]
+  createdAt          DateTime                     @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime                     @updatedAt @db.Timestamptz(3)
+
+  @@index([status, targetDate])
+  @@index([preparedById])
+  @@index([reviewedById])
+  @@index([verifiedById])
+  @@index([closedById])
+}
+
+model CapaActionItem {
+  id              String                    @id @default(cuid())
+  capaId          String
+  capa            Capa                      @relation(fields: [capaId], references: [id], onDelete: Cascade)
+  actionType      CapaActionType
+  description     String
+  ownerEmployeeId String
+  ownerEmployee   Employee                  @relation(fields: [ownerEmployeeId], references: [id], onDelete: Restrict)
+  departmentId    String
+  department      Department                @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  startDate       DateTime                  @db.Date
+  targetDate      DateTime                  @db.Date
+  completionDate  DateTime?                 @db.Date
+  status          CapaActionStatus          @default(NOT_STARTED)
+  comments        String                    @default("")
+  verifiedById    String?
+  verifiedBy      User?                     @relation("ActionVerifier", fields: [verifiedById], references: [id], onDelete: Restrict)
+  verifiedAt      DateTime?                 @db.Timestamptz(3)
+  evidence        MonthlyReportAttachment[]
+  createdAt       DateTime                  @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime                  @updatedAt @db.Timestamptz(3)
+
+  @@index([capaId, status])
+  @@index([ownerEmployeeId, status, targetDate])
+  @@index([departmentId, status])
+  @@index([verifiedById])
+  @@index([status, targetDate])
+}
+
+model CapaVerification {
+  id            String               @id @default(cuid())
+  capaId        String
+  capa          Capa                 @relation(fields: [capaId], references: [id], onDelete: Cascade)
+  result        EvidenceReviewStatus
+  comment       String
+  evidenceIds   Json                 @default("[]")
+  performedById String
+  performedBy   User                 @relation(fields: [performedById], references: [id], onDelete: Restrict)
+  createdAt     DateTime             @default(now()) @db.Timestamptz(3)
+
+  @@index([capaId, createdAt])
+  @@index([performedById])
+}
+
+model PortalNotification {
+  id          String    @id @default(cuid())
+  recipientId String
+  recipient   User      @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  dedupeKey   String
+  title       String
+  message     String
+  href        String
+  readAt      DateTime? @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@unique([recipientId, dedupeKey])
+  @@index([recipientId, readAt, createdAt])
 }
 
 enum Quarter {

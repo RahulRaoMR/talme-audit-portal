@@ -22,3 +22,14 @@ input {
   font: inherit;
 }
 
+@media print {
+  @page { size: A4; margin: 14mm; }
+  body, main { background: white !important; color: black; }
+  aside, main ~ header, .audit-no-print, .audit-screen { display: none !important; }
+  body > #root > div > div > div > header { display: none !important; }
+  .audit-print { display: block !important; font-size: 10pt; }
+  .audit-print section { break-inside: auto; }
+  .audit-print tr, .audit-print h2, .audit-print h3 { break-inside: avoid; }
+  main { padding: 0 !important; }
+}
+

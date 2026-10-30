@@ -22,6 +22,14 @@ import { EmployeeAdminRoute } from "./routes/EmployeeAdminRoute";
 import { PasswordChangedRoute } from "./routes/PasswordChangedRoute";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { MonthlyReportReviewerRoute } from "./routes/MonthlyReportReviewerRoute";
+import { AuditListPage } from "./pages/AuditListPage";
+import { AuditEditorPage } from "./pages/AuditEditorPage";
+import { AuditDetailsPage } from "./pages/AuditDetailsPage";
+import { CapaRegisterPage } from "./pages/CapaRegisterPage";
+import { FindingDetailsPage } from "./pages/FindingDetailsPage";
+import { ComplianceDocumentsPage } from "./pages/ComplianceDocumentsPage";
+import { AuditReportsPage } from "./pages/AuditReportsPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
 
 export function App() {
   return (
@@ -35,6 +43,15 @@ export function App() {
         <Route element={<PasswordChangedRoute />}>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/audits" element={<AuditListPage />} />
+            <Route path="/audits/new" element={<AuditEditorPage />} />
+            <Route path="/audits/:id" element={<AuditDetailsPage />} />
+            <Route path="/audits/:id/edit" element={<AuditEditorPage />} />
+            <Route path="/capas" element={<CapaRegisterPage />} />
+            <Route path="/findings/:id" element={<FindingDetailsPage />} />
+            <Route path="/compliance-documents" element={<ComplianceDocumentsPage />} />
+            <Route path="/audit-reports" element={<AuditReportsPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/monthly-reports" element={<MonthlyReportListPage />} />
             <Route path="/monthly-reports/new" element={<MonthlyReportEditorPage />} />
             <Route path="/monthly-reports/:id" element={<MonthlyReportDetailsPage />} />

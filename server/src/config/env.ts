@@ -1,6 +1,4 @@
-import dotenv from "dotenv";
-
-dotenv.config();
+import "./loadEnv.js";
 
 const requiredEnv = [
   "DATABASE_URL",

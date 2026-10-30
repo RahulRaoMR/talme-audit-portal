@@ -133,8 +133,13 @@ ALTER TABLE "QuarterlyReport" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "QuarterlyKpiScore" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "QuarterlyReportActionHistory" ENABLE ROW LEVEL SECURITY;
 
-REVOKE ALL ON TABLE "Kpi" FROM anon, authenticated;
-REVOKE ALL ON TABLE "PerformanceRatingRange" FROM anon, authenticated;
-REVOKE ALL ON TABLE "QuarterlyReport" FROM anon, authenticated;
-REVOKE ALL ON TABLE "QuarterlyKpiScore" FROM anon, authenticated;
-REVOKE ALL ON TABLE "QuarterlyReportActionHistory" FROM anon, authenticated;
+REVOKE ALL ON TABLE "Kpi", "PerformanceRatingRange", "QuarterlyReport", "QuarterlyKpiScore", "QuarterlyReportActionHistory" FROM PUBLIC;
+
+DO $permissions$
+DECLARE api_role text;
+BEGIN
+    FOR api_role IN SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'authenticated') LOOP
+        EXECUTE format('REVOKE ALL ON TABLE "Kpi", "PerformanceRatingRange", "QuarterlyReport", "QuarterlyKpiScore", "QuarterlyReportActionHistory" FROM %I', api_role);
+    END LOOP;
+END;
+$permissions$;

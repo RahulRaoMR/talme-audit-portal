@@ -6,17 +6,13 @@ import { useAuth } from "../hooks/useAuth";
 import { fetchCurrentMonthlyReport } from "../services/monthlyReport.service";
 import { fetchCurrentQuarterlyReport } from "../services/quarterlyReport.service";
 import type { MonthlyReportListItem } from "../types/monthlyReport";
+import { AuditDashboardPanel } from "../components/AuditDashboardPanel";
 
 const placeholderCards = [
   {
     title: "Attendance",
     value: "Awaiting data",
     icon: CalendarCheck
-  },
-  {
-    title: "Audit Status",
-    value: "No audit yet",
-    icon: ShieldCheck
   }
 ];
 
@@ -105,6 +101,7 @@ export function DashboardPage() {
           );
         })}
       </section>
+      <AuditDashboardPanel />
     </div>
   );
 }

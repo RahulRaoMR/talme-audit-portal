@@ -126,9 +126,13 @@ ALTER TABLE "PayrollMonthlyReportDetail" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "MonthlyReportAttachment" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "MonthlyReportActionHistory" ENABLE ROW LEVEL SECURITY;
 
-REVOKE ALL ON TABLE "MonthlyReport" FROM anon, authenticated;
-REVOKE ALL ON TABLE "HrMonthlyReportDetail" FROM anon, authenticated;
-REVOKE ALL ON TABLE "DeveloperMonthlyReportDetail" FROM anon, authenticated;
-REVOKE ALL ON TABLE "PayrollMonthlyReportDetail" FROM anon, authenticated;
-REVOKE ALL ON TABLE "MonthlyReportAttachment" FROM anon, authenticated;
-REVOKE ALL ON TABLE "MonthlyReportActionHistory" FROM anon, authenticated;
+REVOKE ALL ON TABLE "MonthlyReport", "HrMonthlyReportDetail", "DeveloperMonthlyReportDetail", "PayrollMonthlyReportDetail", "MonthlyReportAttachment", "MonthlyReportActionHistory" FROM PUBLIC;
+
+DO $permissions$
+DECLARE api_role text;
+BEGIN
+    FOR api_role IN SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'authenticated') LOOP
+        EXECUTE format('REVOKE ALL ON TABLE "MonthlyReport", "HrMonthlyReportDetail", "DeveloperMonthlyReportDetail", "PayrollMonthlyReportDetail", "MonthlyReportAttachment", "MonthlyReportActionHistory" FROM %I', api_role);
+    END LOOP;
+END;
+$permissions$;

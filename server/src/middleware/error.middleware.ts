@@ -1,5 +1,6 @@
 import type { ErrorRequestHandler, RequestHandler } from "express";
 import multer from "multer";
+import { ZodError } from "zod";
 import { HttpError } from "../utils/httpError.js";
 
 export const notFoundHandler: RequestHandler = (req, _res, next) => {
@@ -7,6 +8,10 @@ export const notFoundHandler: RequestHandler = (req, _res, next) => {
 };
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
+  if (error instanceof ZodError) {
+    res.status(400).json({ message: error.errors.map((issue) => issue.message).join(", ") });
+    return;
+  }
   if (error instanceof multer.MulterError) {
     const message = error.code === "LIMIT_FILE_SIZE"
       ? "Each attachment must be 10 MB or smaller"

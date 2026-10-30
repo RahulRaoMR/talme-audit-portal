@@ -1,3 +1,4 @@
+import "../src/config/loadEnv.js";
 import { randomBytes } from "node:crypto";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
