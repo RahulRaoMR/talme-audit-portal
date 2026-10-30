@@ -30,6 +30,10 @@ import { FindingDetailsPage } from "./pages/FindingDetailsPage";
 import { ComplianceDocumentsPage } from "./pages/ComplianceDocumentsPage";
 import { AuditReportsPage } from "./pages/AuditReportsPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
+import { RiskRegisterPage } from "./pages/RiskRegisterPage";
+import { RiskEditorPage } from "./pages/RiskEditorPage";
+import { RiskDetailPage } from "./pages/RiskDetailPage";
+import { RiskConfigurationPage } from "./pages/RiskConfigurationPage";
 
 export function App() {
   return (
@@ -52,6 +56,11 @@ export function App() {
             <Route path="/compliance-documents" element={<ComplianceDocumentsPage />} />
             <Route path="/audit-reports" element={<AuditReportsPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/risks" element={<RiskRegisterPage />} />
+            <Route path="/risks/new" element={<RiskEditorPage />} />
+            <Route path="/risks/configuration" element={<RiskConfigurationPage />} />
+            <Route path="/risks/:id" element={<RiskDetailPage />} />
+            <Route path="/risks/:id/edit" element={<RiskEditorPage />} />
             <Route path="/monthly-reports" element={<MonthlyReportListPage />} />
             <Route path="/monthly-reports/new" element={<MonthlyReportEditorPage />} />
             <Route path="/monthly-reports/:id" element={<MonthlyReportDetailsPage />} />

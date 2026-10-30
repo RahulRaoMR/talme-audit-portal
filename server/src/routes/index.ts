@@ -8,6 +8,7 @@ import { quarterlyReportRouter } from "./quarterlyReport.routes.js";
 import { prisma } from "../config/prisma.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { auditRouter, notificationRouter } from "./audit.routes.js";
+import { riskRouter } from "./risk.routes.js";
 
 export const apiRouter = Router();
 
@@ -18,6 +19,7 @@ apiRouter.get("/health", asyncHandler(async (_req, res) => {
 
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/audits", auditRouter);
+apiRouter.use("/risks", riskRouter);
 apiRouter.use("/notifications", notificationRouter);
 apiRouter.use("/employees", employeeRouter);
 apiRouter.use("/monthly-reports", monthlyReportRouter);

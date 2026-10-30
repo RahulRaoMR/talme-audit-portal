@@ -94,10 +94,11 @@ the document contains company-wide findings. Authentication is unchanged.
 
 ## 6. Remaining work and practical limits
 
-The Legal Register, Risk Assessment, Training Register, Training Effectiveness,
-Management Review and Organisation Chart/Responsibility Matrix are not
-implemented as dedicated registers. Their source needs are visible in Compliance
-Documents, and findings support future module/record links.
+The Legal Register, Training Register, Training Effectiveness, Management Review
+and Organisation Chart/Responsibility Matrix remain outside this implementation.
+Risk Assessment was subsequently implemented; see
+[the Risk Assessment report](risk-assessment-implementation.md). Its source needs
+and the remaining register needs are visible in Compliance Documents.
 
 Email/SMTP reminders and a background scheduler are not enabled; notifications
 are in-app. File storage remains the existing local authenticated storage and

@@ -9,7 +9,8 @@ export function TopNav({ onMenuClick }: { onMenuClick: () => void }) {
   const location = useLocation();
   const [unread, setUnread] = useState(0);
   useEffect(() => { const refresh = () => { apiRequest<{ unread: number }>("/notifications").then((result) => setUnread(result.unread)).catch(() => undefined); }; refresh(); const interval = window.setInterval(refresh, 60000); return () => window.clearInterval(interval); }, [location.pathname]);
-  const sectionTitle = location.pathname.startsWith("/audits") ? "Internal Audits"
+  const sectionTitle = location.pathname.startsWith("/risks") ? "Risk Assessment"
+    : location.pathname.startsWith("/audits") ? "Internal Audits"
     : location.pathname.startsWith("/capas") || location.pathname.startsWith("/findings") ? "CAPA and Findings"
     : location.pathname.startsWith("/compliance-documents") ? "Compliance Documents"
     : location.pathname.startsWith("/audit-reports") ? "Audit Reports"

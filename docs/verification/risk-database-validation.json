@@ -1,0 +1,50 @@
+{
+  "migration": "20261030140000_risk_assessment",
+  "existingTablesChecked": 25,
+  "allExistingRecordFingerprintsUnchanged": true,
+  "existingCounts": {
+    "Department": 3,
+    "Role": 5,
+    "User": 1,
+    "PasswordResetOtp": 0,
+    "Employee": 1,
+    "MonthlyReport": 0,
+    "HrMonthlyReportDetail": 0,
+    "DeveloperMonthlyReportDetail": 0,
+    "PayrollMonthlyReportDetail": 0,
+    "MonthlyReportAttachment": 0,
+    "MonthlyReportActionHistory": 12,
+    "AuditCounter": 2,
+    "FindingRating": 3,
+    "InternalAudit": 1,
+    "AuditTeamMember": 0,
+    "AuditFinding": 11,
+    "Capa": 11,
+    "CapaActionItem": 0,
+    "CapaVerification": 0,
+    "PortalNotification": 0,
+    "Kpi": 18,
+    "PerformanceRatingRange": 5,
+    "QuarterlyReport": 0,
+    "QuarterlyKpiScore": 0,
+    "QuarterlyReportActionHistory": 0
+  },
+  "riskCount": 0,
+  "scoringVersion": 1,
+  "newTablesWithRLS": 2,
+  "postBrowserExistingCountsUnchanged": true,
+  "temporaryBrowserAccountsRemaining": 0,
+  "importedAudit": {
+    "reference": "AUD-2026-0001",
+    "status": "DRAFT",
+    "findings": 11
+  },
+  "verification": {
+    "typecheck": "passed",
+    "build": "passed",
+    "unitTestsPassed": 47,
+    "auditApiChecksPassed": 99,
+    "riskApiChecksPassed": 132,
+    "browser": "passed"
+  }
+}

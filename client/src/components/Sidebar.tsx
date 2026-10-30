@@ -11,6 +11,7 @@ import {
   ListChecks,
   Settings,
   ShieldCheck,
+  ShieldAlert,
   Users,
   X
 } from "lucide-react";
@@ -31,6 +32,7 @@ const navigation = [
   { label: "Performance Reviews", path: "/dashboard", icon: ClipboardCheck },
   { label: "Internal Audits", path: "/audits", icon: ShieldCheck },
   { label: "CAPA Register", path: "/capas", icon: ListChecks },
+  { label: "Risk Register", path: "/risks", icon: ShieldAlert },
   { label: "Compliance Documents", path: "/compliance-documents", icon: FileText },
   { label: "Notifications", path: "/notifications", icon: Bell },
   { label: "Departments", path: "/dashboard", icon: Building2 },

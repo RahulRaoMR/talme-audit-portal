@@ -1,0 +1,24 @@
+import type { DepartmentSummary } from "./auth";
+import type { AuditHistory, Pagination, Distribution } from "./audit";
+export type RiskLevel = { code: string; label: string; minScore: number; maxScore: number; colour: "green" | "amber" | "orange" | "red" | "blue" | "slate" };
+export type RiskPerson = { id: string; firstName: string; lastName: string; employeeCode: string; departmentId: string };
+export type RiskUser = { id: string; email: string; employee: RiskPerson | null };
+export type RiskEvidence = { id: string; originalName: string; mimeType: string; size: number; createdAt: string; uploadedById: string };
+export type Risk = {
+  id: string; reference: string; title: string; description: string; departmentId: string; department: DepartmentSummary;
+  processActivity: string; category: string; hazardSource: string; potentialConsequence: string; existingControls: string;
+  likelihood: number; severity: number; riskScore: number; riskLevel: RiskLevel; additionalMitigation: string;
+  responsibleEmployeeId: string; responsibleEmployee: RiskPerson; targetDate: string | null; completionDate: string | null;
+  residualLikelihood: number | null; residualSeverity: number | null; residualRiskScore: number | null; residualRiskLevel: RiskLevel | null;
+  status: string; reviewDate: string; comments: string; auditId: string | null; findingId: string | null; capaId: string | null;
+  audit: { id: string; reference: string; title: string } | null; finding: { id: string; reference: string } | null; capa: { id: string; reference: string } | null;
+  createdBy: RiskUser; createdAt: string; updatedAt: string; reviewedBy: RiskUser | null; reviewedAt: string | null; closedBy: RiskUser | null; closedAt: string | null;
+  metrics: { isOverdue: boolean; daysOverdue: number; daysRemaining: number | null; dueForReview: boolean };
+  permissions: { canManage: boolean; canMitigate: boolean; canReview: boolean; canReopen: boolean };
+  evidence: RiskEvidence[]; history: Array<Omit<AuditHistory,"performedByUser"> & { performedByUser:RiskUser }>;
+};
+export type RiskOptions = { config: { levels: RiskLevel[]; version: number }; departments: DepartmentSummary[]; employees: RiskPerson[]; audits: { id: string; reference: string; title: string }[]; findings: { id: string; reference: string; auditId: string; departmentId: string; description: string; capa: { id: string; reference: string } | null }[]; canCreate: boolean; canConfigure: boolean; source: { id: string; auditId: string; departmentId: string; responsibleEmployeeId: string | null; description: string; reference: string; capaId: string | null } | null };
+export type RiskFilters = { page?: number; pageSize?: number; search?: string; departmentId?: string; responsibleEmployeeId?: string; level?: string; status?: string; category?: string; reviewFrom?: string; reviewTo?: string; view?: string; auditId?: string; findingId?: string; capaId?: string };
+export type RiskList = { risks: Risk[]; pagination: Pagination };
+export type RiskDashboard = { totalRisks: number; criticalRisks: number; highRisks: number; openRisks: number; overdueMitigations: number; dueForReview: number; byDepartment: Distribution; byCategory: Distribution; monthlyTrend: Distribution; scoringVersion: number };
+export type RiskConfiguration = { levels: RiskLevel[]; version: number; history: Risk["history"] };

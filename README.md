@@ -316,3 +316,29 @@ The frontend runs at `http://localhost:5173` by default.
 Employee endpoints require an authenticated `SUPER_ADMIN` or `HR_ADMIN` whose
 temporary password has already been changed. Normal employee creation cannot
 assign the `SUPER_ADMIN` role.
+
+## Risk Assessment Register
+
+Open **Risk Register** in the sidebar. Managers create/manage department risks;
+HR Admin/Super Admin manage all risks. Employees update assigned mitigation
+progress, completion, residual assessment and evidence. Auditors read risks
+linked to their audits/findings and can choose **Create risk from finding** on
+an authorised finding/CAPA detail page.
+
+Scores calculate as likelihood × severity on a 1–5 scale. Default levels are
+Low 1–4, Medium 5–9, High 10–16 and Critical 17–25. Administrators can change the
+bands under **Scoring configuration**; changes have version checks and history.
+Current classifications follow current bands; numeric assessments are retained.
+Managers/admins record reviews and accept/close/reopen with reasons. Closure
+requires completed mitigation and residual scoring. Overdue mitigation and
+review-due filters use the Indian business date.
+
+Apply the additive migration with the existing `npm run prisma:deploy --workspace
+server` workflow after testing. `npm run test:risk-api --workspace server` runs
+the risk suite in an isolated schema; `npm run test:all-api --workspace server`
+runs existing audit and risk API workflows together. `npm run test:risk-ui
+--workspace server` uses installed Edge and temporary persisted fixtures against
+the local running app, then removes them. It does not require browser libraries.
+
+See [Risk Assessment implementation and gaps](docs/risk-assessment-implementation.md)
+for the schema, routes, permissions, integration and verification details.

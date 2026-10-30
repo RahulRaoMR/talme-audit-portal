@@ -20,6 +20,7 @@ model Department {
   internalAudits InternalAudit[]
   auditFindings  AuditFinding[]
   capaActions    CapaActionItem[]
+  risks          RiskAssessment[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
@@ -59,6 +60,10 @@ model User {
   capaVerifications               CapaVerification[]
   evidenceReviews                 MonthlyReportAttachment[]      @relation("EvidenceReviewer")
   notifications                   PortalNotification[]
+  risksCreated                    RiskAssessment[]               @relation("RiskCreator")
+  risksReviewed                   RiskAssessment[]               @relation("RiskReviewer")
+  risksClosed                     RiskAssessment[]               @relation("RiskCloser")
+  riskScoringUpdates              RiskScoringConfiguration[]
   isActive                        Boolean                        @default(true)
   mustChangePassword              Boolean                        @default(true)
   passwordChangedAt               DateTime?
@@ -105,6 +110,7 @@ model Employee {
   quarterlyReports    QuarterlyReport[]
   assignedFindings    AuditFinding[]
   assignedCapaActions CapaActionItem[]
+  assignedRisks       RiskAssessment[]
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
@@ -153,6 +159,16 @@ enum MonthlyReportAction {
   COMMENT_ADDED
   AUDIT_CLOSED
   AUDIT_REOPENED
+  RISK_CREATED
+  RISK_UPDATED
+  RISK_SCORE_CHANGED
+  RISK_MITIGATION_UPDATED
+  RISK_OWNER_CHANGED
+  RISK_STATUS_CHANGED
+  RISK_REVIEWED
+  RISK_CLOSED
+  RISK_REOPENED
+  RISK_SCORING_CONFIGURED
 }
 
 model MonthlyReport {
@@ -239,6 +255,8 @@ model PayrollMonthlyReportDetail {
 
 model MonthlyReportAttachment {
   id              String               @id @default(cuid())
+  riskId          String?
+  risk            RiskAssessment?      @relation(fields: [riskId], references: [id], onDelete: Cascade)
   monthlyReportId String?
   monthlyReport   MonthlyReport?       @relation(fields: [monthlyReportId], references: [id], onDelete: Cascade)
   auditId         String?
@@ -270,10 +288,15 @@ model MonthlyReportAttachment {
   @@index([capaId])
   @@index([actionItemId])
   @@index([reviewedById])
+  @@index([riskId, createdAt])
 }
 
 model MonthlyReportActionHistory {
   id                String              @id @default(cuid())
+  riskId            String?
+  risk              RiskAssessment?     @relation(fields: [riskId], references: [id], onDelete: Cascade)
+  riskConfigurationId String?
+  riskConfiguration RiskScoringConfiguration? @relation(fields: [riskConfigurationId], references: [id], onDelete: Restrict)
   monthlyReportId   String?
   monthlyReport     MonthlyReport?      @relation(fields: [monthlyReportId], references: [id], onDelete: Cascade)
   auditId           String?
@@ -295,6 +318,88 @@ model MonthlyReportActionHistory {
   @@index([auditId, createdAt])
   @@index([findingId])
   @@index([capaId])
+  @@index([riskId, createdAt])
+  @@index([riskConfigurationId, createdAt])
+}
+
+enum RiskStatus {
+  OPEN
+  MITIGATION_IN_PROGRESS
+  MITIGATED
+  ACCEPTED
+  CLOSED
+}
+
+model RiskScoringConfiguration {
+  id          String @id @default("default")
+  levels      Json
+  version     Int @default(1)
+  updatedById String?
+  updatedBy   User? @relation(fields: [updatedById], references: [id], onDelete: Restrict)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+  history     MonthlyReportActionHistory[]
+
+  @@index([updatedById])
+}
+
+model RiskAssessment {
+  id                    String @id @default(cuid())
+  reference             String @unique
+  title                 String
+  description           String
+  departmentId          String
+  department            Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  processActivity       String
+  category              String
+  hazardSource          String @default("")
+  potentialConsequence  String @default("")
+  existingControls      String @default("")
+  likelihood            Int
+  severity              Int
+  riskScore             Int
+  additionalMitigation  String @default("")
+  responsibleEmployeeId String
+  responsibleEmployee   Employee @relation(fields: [responsibleEmployeeId], references: [id], onDelete: Restrict)
+  targetDate            DateTime? @db.Date
+  completionDate        DateTime? @db.Date
+  residualLikelihood    Int?
+  residualSeverity      Int?
+  residualRiskScore     Int?
+  status                RiskStatus @default(OPEN)
+  reviewDate            DateTime @db.Date
+  comments              String @default("")
+  auditId               String?
+  audit                 InternalAudit? @relation(fields: [auditId], references: [id], onDelete: Restrict)
+  findingId             String?
+  finding               AuditFinding? @relation(fields: [findingId], references: [id], onDelete: Restrict)
+  capaId                String?
+  capa                  Capa? @relation(fields: [capaId], references: [id], onDelete: Restrict)
+  createdById           String
+  createdBy             User @relation("RiskCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  reviewedById          String?
+  reviewedBy            User? @relation("RiskReviewer", fields: [reviewedById], references: [id], onDelete: Restrict)
+  reviewedAt            DateTime? @db.Timestamptz(3)
+  closedById            String?
+  closedBy              User? @relation("RiskCloser", fields: [closedById], references: [id], onDelete: Restrict)
+  closedAt              DateTime? @db.Timestamptz(3)
+  createdAt             DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime @updatedAt @db.Timestamptz(3)
+  evidence              MonthlyReportAttachment[]
+  history               MonthlyReportActionHistory[]
+
+  @@index([departmentId, status])
+  @@index([responsibleEmployeeId, status])
+  @@index([status, targetDate])
+  @@index([status, reviewDate])
+  @@index([riskScore])
+  @@index([category, status])
+  @@index([auditId])
+  @@index([findingId])
+  @@index([capaId])
+  @@index([createdById])
+  @@index([reviewedById])
+  @@index([closedById])
+  @@index([createdAt])
 }
 
 enum InternalAuditStatus {
@@ -393,6 +498,7 @@ model InternalAudit {
   findings               AuditFinding[]
   evidence               MonthlyReportAttachment[]
   history                MonthlyReportActionHistory[]
+  risks                  RiskAssessment[]
   createdAt              DateTime                     @default(now()) @db.Timestamptz(3)
   updatedAt              DateTime                     @updatedAt @db.Timestamptz(3)
 
@@ -433,6 +539,7 @@ model AuditFinding {
   capa                  Capa?
   evidence              MonthlyReportAttachment[]
   history               MonthlyReportActionHistory[]
+  risks                 RiskAssessment[]
   createdAt             DateTime                     @default(now()) @db.Timestamptz(3)
   updatedAt             DateTime                     @updatedAt @db.Timestamptz(3)
 
@@ -445,6 +552,7 @@ model AuditFinding {
 }
 
 model Capa {
+  risks                 RiskAssessment[]
   id                 String                       @id @default(cuid())
   reference          String                       @unique
   findingId          String                       @unique

@@ -44,7 +44,7 @@ function requireMutableFinding(finding: Finding) { requireOpenAudit(finding.audi
 function requireChanged(count: number) { if (count !== 1) throw new HttpError(409, "The record changed. Refresh it and try again."); }
 function requireComment(comment: string) { if (!comment.trim()) throw new HttpError(400, "A review comment or reason is required"); }
 
-function findingAccess(actor: Actor): Prisma.AuditFindingWhereInput {
+export function findingAccess(actor: Actor): Prisma.AuditFindingWhereInput {
   if (isAuditAdmin(actor)) return {};
   if (actor.role.name === "AUDITOR") return { audit: { OR: [{ auditorId: actor.id }, { createdById: actor.id }, { teamMembers: { some: { userId: actor.id } } }] } };
   const own: Prisma.AuditFindingWhereInput[] = [{ audit: { teamMembers: { some: { userId: actor.id } } } }];
@@ -54,7 +54,7 @@ function findingAccess(actor: Actor): Prisma.AuditFindingWhereInput {
   }
   return { OR: own };
 }
-function auditAccess(actor: Actor): Prisma.InternalAuditWhereInput {
+export function auditAccess(actor: Actor): Prisma.InternalAuditWhereInput {
   if (isAuditAdmin(actor)) return {};
   if (actor.role.name === "AUDITOR") return { OR: [{ auditorId: actor.id }, { createdById: actor.id }, { teamMembers: { some: { userId: actor.id } } }] };
   return { OR: [{ teamMembers: { some: { userId: actor.id } } }, { findings: { some: findingAccess(actor) } }, ...(actor.role.name === "MANAGER" && actor.employee ? [{ departmentId: actor.employee.departmentId }] : [])] };
@@ -83,7 +83,7 @@ async function activeDepartment(id: string) { if (!await prisma.department.findF
 async function validateAuditor(id: string) {
   if (!await prisma.user.findFirst({ relationLoadStrategy: "join", where: { id, isActive: true, role: { name: { in: ["AUDITOR", "HR_ADMIN", "SUPER_ADMIN"] } } }, select: { id: true } })) throw new HttpError(400, "Select an active auditor or administrator");
 }
-async function nextReference(tx: Prisma.TransactionClient, prefix: string) {
+export async function nextReference(tx: Prisma.TransactionClient, prefix: string) {
   const year = new Intl.DateTimeFormat("en", { timeZone: "Asia/Kolkata", year: "numeric" }).format(new Date());
   const key = `${prefix}-${year}`;
   const counter = await tx.auditCounter.upsert({ where: { key }, create: { key, value: 1 }, update: { value: { increment: 1 } } });

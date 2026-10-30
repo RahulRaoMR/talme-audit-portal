@@ -35,8 +35,9 @@ try {
   await admin.$executeRawUnsafe(`CREATE SCHEMA "${schema}"`); created = true;
   await command("MIGRATION", ["scripts/prisma.ts", "migrate", "deploy"]);
   await command("SEED", ["prisma/seed.ts"]);
-  await command("API", ["scripts/verify-audit-capa.ts"]);
-  console.log("PASS: isolated Audit/CAPA migration and API verification.");
+  if (!process.argv.includes("--risk")) await command("AUDIT API", ["scripts/verify-audit-capa.ts"]);
+  if (process.argv.includes("--risk") || process.argv.includes("--all")) await command("RISK API", ["scripts/verify-risk.ts"]);
+  console.log("PASS: isolated migration and requested API verification.");
 } catch (error) { console.error(error instanceof Error ? clean(error.message) : "Audit verification failed"); process.exitCode = 1; }
 finally {
   if (created) {

@@ -1,3 +1,4 @@
+import { RiskDashboardPanel } from "../components/RiskDashboardPanel";
 import { useEffect, useState } from "react";
 import { ArrowRight, CalendarCheck, ClipboardList, FileBarChart, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -101,7 +102,7 @@ export function DashboardPage() {
           );
         })}
       </section>
-      <AuditDashboardPanel />
+      <AuditDashboardPanel /><RiskDashboardPanel />
     </div>
   );
 }
